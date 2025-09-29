@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improved EnlightenGAN - Advanced Low Light Enhancement</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .method-selection {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .method-selection h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .method-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .method-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .method-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .method-option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .method-option input[type="radio"] {
+            margin: 0;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f2ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            padding: 40px;
+            display: none;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .image-container {
+            text-align: center;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-container h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.2em;
+        }
+
+        .result-image {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .result-image:hover {
+            transform: scale(1.05);
+        }
+
+        .image-info {
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .darkness-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .darkness-very_dark {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .darkness-dark {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .darkness-moderate {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .darkness-bright {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .compare-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+
+            .method-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌅 Improved EnlightenGAN</h1>
+            <p>Advanced AI-Powered Low Light Image Enhancement with Multiple Techniques</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="method-selection">
+                <h3>🎛️ Enhancement Method</h3>
+                <div class="method-options">
+                    <label class="method-option selected" for="enlightengan_improved">
+                        <input type="radio" id="enlightengan_improved" name="method" value="enlightengan_improved" checked>
+                        🤖 EnlightenGAN Improved
+                    </label>
+                    <label class="method-option" for="hybrid">
+                        <input type="radio" id="hybrid" name="method" value="hybrid">
+                        🔄 Hybrid Method
+                    </label>
+                    <label class="method-option" for="clahe">
+                        <input type="radio" id="clahe" name="method" value="clahe">
+                        📈 Adaptive CLAHE
+                    </label>
+                    <label class="method-option" for="histogram">
+                        <input type="radio" id="histogram" name="method" value="histogram">
+                        📊 Histogram Equalization
+                    </label>
+                    <label class="method-option" for="retinex">
+                        <input type="radio" id="retinex" name="method" value="retinex">
+                        💡 Retinex Algorithm
+                    </label>
+                    <label class="method-option" for="compare_all">
+                        <input type="radio" id="compare_all" name="method" value="compare_all">
+                        🔍 Compare All Methods
+                    </label>
+                </div>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Drag & drop your image here or click to browse</div>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Image
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+            </div>
+
+            <div class="error" id="errorMessage"></div>
+            <div class="success" id="successMessage"></div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Enhancing your image with advanced AI...</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">✨ Enhancement Results</h2>
+            <div class="results-grid" id="resultsGrid">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Method selection
+        const methodOptions = document.querySelectorAll('.method-option');
+        methodOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                methodOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
+                return;
+            }
+
+            // Validate file size (16MB max)
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size too large. Please select an image smaller than 16MB.');
+                return;
+            }
+
+            uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const selectedMethod = document.querySelector('input[name="method"]:checked').value;
+            formData.append('method', selectedMethod);
+
+            showLoading();
+            hideError();
+            hideSuccess();
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showResults(data);
+                    showSuccess(`Image enhanced successfully using ${data.method} method! Darkness level: ${data.darkness_level}`);
+                } else {
+                    showError(data.error || 'An error occurred while processing the image.');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showError('Network error. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+
+        function showResults(data) {
+            resultsGrid.innerHTML = '';
+            
+            if (data.method === 'compare_all') {
+                // Show all comparison results
+                for (const [methodName, imageData] of Object.entries(data.results)) {
+                    const container = createImageContainer(methodName, imageData, data.filename, data.original_shape, data.darkness_level);
+                    if (methodName !== 'Original') {
+                        container.appendChild(createDownloadButton(imageData, `${methodName.replace(' ', '_')}.jpg`));
+                    }
+                    resultsGrid.appendChild(container);
+                }
+            } else {
+                // Show single result
+                const originalContainer = createImageContainer('📷 Original Image', data.original_image, data.filename, data.original_shape, data.darkness_level);
+                resultsGrid.appendChild(originalContainer);
+                
+                const enhancedContainer = createImageContainer('✨ Enhanced Image', data.enhanced_image, `${data.method} Enhanced`, data.enhanced_shape, data.darkness_level);
+                enhancedContainer.appendChild(createDownloadButton(data.enhanced_image, 'enhanced_image.jpg'));
+                resultsGrid.appendChild(enhancedContainer);
+            }
+            
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createImageContainer(title, imageSrc, filename, shape, darknessLevel) {
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            
+            const darknessClass = `darkness-${darknessLevel}`;
+            const darknessText = darknessLevel.replace('_', ' ').toUpperCase();
+            
+            container.innerHTML = `
+                <h3>${title}</h3>
+                <img src="${imageSrc}" class="result-image" alt="${title}">
+                <div class="image-info">${filename} (${shape[1]}×${shape[0]})</div>
+                <div class="darkness-indicator ${darknessClass}">${darknessText}</div>
+            `;
+            
+            return container;
+        }
+
+        function createDownloadButton(imageData, filename) {
+            const button = document.createElement('button');
+            button.className = 'download-btn';
+            button.textContent = '💾 Download';
+            button.onclick = () => downloadImage(imageData, filename);
+            return button;
+        }
+
+        function downloadImage(imageData, filename) {
+            const link = document.createElement('a');
+            link.href = imageData;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            resultsSection.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+        }
+
+        function hideSuccess() {
+            successMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
